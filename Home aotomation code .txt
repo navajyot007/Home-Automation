@@ -1,0 +1,101 @@
+#include <SoftwareSerial.h>
+SoftwareSerial mySerial(2, 3); //RX, TX
+#include<LiquidCrystal.h>
+const int rs = 13 , en = 12, d4 = 11, d5 = 10, d6 = 9, d7 = 8;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+int fan_relay = A0;
+int soil_relay = A1;
+int ultra_relay = A2;
+int Bulb_relay = A3;
+int Buzzer = 7;
+int Flame_sensor = A5;
+int Soil_sensor = A4;
+const int trigPin = 5;
+const int echoPin = 6;
+int Bulb_relay_1 =4;
+String command;
+19 | P a g e
+void setup() {
+ // put your setup code here, to run once:
+ Serial.begin(9600);
+ pinMode(fan_relay, OUTPUT);
+ pinMode(soil_relay, OUTPUT);
+ pinMode(ultra_relay, OUTPUT);
+ pinMode(Bulb_relay, OUTPUT);
+ pinMode(Bulb_relay_1, OUTPUT);
+ pinMode(Buzzer, OUTPUT);
+ pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
+ pinMode(echoPin, INPUT); // Sets the echoPin as an Input
+} void loop() {
+ // put your main code here, to run repeatedly:
+ int Soil_Moisture_value = analogRead(Soil_sensor);
+ Serial.print("Soil_Moisture_value: ");
+ Serial.println(Soil_Moisture_value);
+ int flameValue = digitalRead(Flame_sensor);
+ Serial.print("flameValue = ");
+ Serial.println(flameValue);
+ long duration,distance;
+ digitalWrite(trigPin, LOW);
+ delayMicroseconds(2);
+ digitalWrite(trigPin, HIGH);
+ delayMicroseconds(10);
+ digitalWrite(trigPin, LOW);
+ duration = pulseIn(echoPin, HIGH);
+ distance = duration * 0.034 / 2;
+ Serial.print("Distance: ");
+ Serial.println(distance);
+ if (Serial.available() > 0) {
+ command = "";
+ command = Serial.read();
+ Serial.println(command); {
+ if (command == "49") {
+ Serial.println("bulb is on");
+ digitalWrite(Bulb_relay, HIGH) }
+ if (command == "50") {
+ Serial.println("bulb is off");
+ digitalWrite(Bulb_relay, LOW);}
+ if (command == "51") {
+ Serial.println("relay fan on");
+ digitalWrite(fan_relay, HIGH);}
+ if (command == "52") {
+ Serial.println("relay fan off");
+ digitalWrite(fan_relay, LOW); }
+ if (command == "53") {
+ Serial.println("bulb_1 is on");
+ digitalWrite(Bulb_relay_1, HIGH); }
+ if (command == "54"){
+ Serial.println("bulb_1 is off");
+ digitalWrite(Bulb_relay_1, LOW); }}}
+ else if (flameValue == 0) {
+ digitalWrite(Buzzer, HIGH);
+ lcd.clear();
+ lcd.setCursor(0, 0);
+ lcd.print("Flames Detected");
+ delay(2000); }
+ else if (Soil_Moisture_value >= 500){
+ digitalWrite(soil_relay, HIGH);
+ lcd.clear();
+ lcd.setCursor(0, 0);
+ lcd.print("Soil is Dry");
+ delay(2000); }
+ else if (distance > 9){
+ digitalWrite(ultra_relay, HIGH);
+ lcd.clear();
+ lcd.setCursor(0, 0);
+ lcd.print("Motor is ON");
+ lcd.setCursor(0, 1);
+ lcd.print("tank is empty");
+ delay(2000); }
+ else if (distance < 4){
+ digitalWrite(ultra_relay, HIGH);
+ lcd.clear();
+ lcd.setCursor(0, 0);
+ lcd.print("tank is Full");
+ delay(2000); } Else{
+ lcd.clear();
+ lcd.setCursor(0, 0);
+ lcd.print("Everything is OK");
+ digitalWrite(soil_relay, LOW);
+ digitalWrite(Buzzer, LOW);
+ delay(2000);}
+}
